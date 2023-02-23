@@ -1,6 +1,4 @@
 # K-BERT
-Original: https://github.com/autoliuweijie/K-BERT
-
 ![](https://img.shields.io/badge/license-MIT-000000.svg)
 
 Sorce code and datasets for ["K-BERT: Enabling Language Representation with Knowledge Graph"](https://aaai.org/Papers/AAAI/2020GB/AAAI-LiuW.5594.pdf), which is implemented based on the [UER](https://github.com/dbiir/UER-py) framework.
@@ -22,9 +20,9 @@ argparse == 1.1
 
 ## Prepare
 
-Pretrained BERT (base, uncased): https://huggingface.co/bert-base-uncased/tree/main Download `pytorch_model.bin` file and rename it to `google_model.bin`, place it in the `models` directory.
-
-Dataset for sentiment analysis: From IMDB
+* Download the ``google_model.bin`` from [here](https://share.weiyun.com/5GuzfVX), and save it to the ``models/`` directory.
+* Download the ``CnDbpedia.spo`` from [here](https://share.weiyun.com/5BvtHyO), and save it to the ``brain/kgs/`` directory.
+* Optional - Download the datasets for evaluation from [here](https://share.weiyun.com/5Id9PVZ), unzip and place them in the ``datasets/`` directory.
 
 The directory tree of K-BERT:
 ```

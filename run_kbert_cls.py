@@ -1,4 +1,4 @@
-# -*- encoding:utf-8 -*-
+# -*- coding: utf-8 -*-
 """
   This script provides an k-BERT exmaple for classification.
 """
@@ -75,71 +75,71 @@ def add_knowledge_worker(params):
             print("Progress of process {}: {}/{}".format(p_id, line_id, sentences_num))
             sys.stdout.flush()
         line = line.strip().split('\t')
-        try:
-            if len(line) == 2:
-                label = int(line[columns["label"]])
-                text = CLS_TOKEN + line[columns["text_a"]]
-   
-                tokens, pos, vm, _ = kg.add_knowledge_with_vm([text], add_pad=True, max_length=args.seq_length)
-                tokens = tokens[0]
-                pos = pos[0]
-                vm = vm[0].astype("bool")
+        # try:
+        if len(line) == 2:
+            label = int(line[columns["label"]])
+            text = CLS_TOKEN + line[columns["text_a"]]
 
-                token_ids = [vocab.get(t) for t in tokens]
-                mask = [1 if t != PAD_TOKEN else 0 for t in tokens]
+            tokens, pos, vm, _ = kg.add_knowledge_with_vm([text], add_pad=True, max_length=args.seq_length)
+            tokens = tokens[0]
+            pos = pos[0]
+            vm = vm[0].astype("bool")
 
-                dataset.append((token_ids, label, mask, pos, vm))
+            token_ids = [vocab.get(t) for t in tokens]
+            mask = [1 if t != PAD_TOKEN else 0 for t in tokens]
+
+            dataset.append((token_ids, label, mask, pos, vm))
+        
+        elif len(line) == 3:
+            label = int(line[columns["label"]])
+            text = CLS_TOKEN + line[columns["text_a"]] + SEP_TOKEN + line[columns["text_b"]] + SEP_TOKEN
+
+            tokens, pos, vm, _ = kg.add_knowledge_with_vm([text], add_pad=True, max_length=args.seq_length)
+            tokens = tokens[0]
+            pos = pos[0]
+            vm = vm[0].astype("bool")
+
+            token_ids = [vocab.get(t) for t in tokens]
+            mask = []
+            seg_tag = 1
+            for t in tokens:
+                if t == PAD_TOKEN:
+                    mask.append(0)
+                else:
+                    mask.append(seg_tag)
+                if t == SEP_TOKEN:
+                    seg_tag += 1
+
+            dataset.append((token_ids, label, mask, pos, vm))
+        
+        elif len(line) == 4:  # for dbqa
+            qid=int(line[columns["qid"]])
+            label = int(line[columns["label"]])
+            text_a, text_b = line[columns["text_a"]], line[columns["text_b"]]
+            text = CLS_TOKEN + text_a + SEP_TOKEN + text_b + SEP_TOKEN
+
+            tokens, pos, vm, _ = kg.add_knowledge_with_vm([text], add_pad=True, max_length=args.seq_length)
+            tokens = tokens[0]
+            pos = pos[0]
+            vm = vm[0].astype("bool")
+
+            token_ids = [vocab.get(t) for t in tokens]
+            mask = []
+            seg_tag = 1
+            for t in tokens:
+                if t == PAD_TOKEN:
+                    mask.append(0)
+                else:
+                    mask.append(seg_tag)
+                if t == SEP_TOKEN:
+                    seg_tag += 1
             
-            elif len(line) == 3:
-                label = int(line[columns["label"]])
-                text = CLS_TOKEN + line[columns["text_a"]] + SEP_TOKEN + line[columns["text_b"]] + SEP_TOKEN
-
-                tokens, pos, vm, _ = kg.add_knowledge_with_vm([text], add_pad=True, max_length=args.seq_length)
-                tokens = tokens[0]
-                pos = pos[0]
-                vm = vm[0].astype("bool")
-
-                token_ids = [vocab.get(t) for t in tokens]
-                mask = []
-                seg_tag = 1
-                for t in tokens:
-                    if t == PAD_TOKEN:
-                        mask.append(0)
-                    else:
-                        mask.append(seg_tag)
-                    if t == SEP_TOKEN:
-                        seg_tag += 1
-
-                dataset.append((token_ids, label, mask, pos, vm))
+            dataset.append((token_ids, label, mask, pos, vm, qid))
+        else:
+            pass
             
-            elif len(line) == 4:  # for dbqa
-                qid=int(line[columns["qid"]])
-                label = int(line[columns["label"]])
-                text_a, text_b = line[columns["text_a"]], line[columns["text_b"]]
-                text = CLS_TOKEN + text_a + SEP_TOKEN + text_b + SEP_TOKEN
-
-                tokens, pos, vm, _ = kg.add_knowledge_with_vm([text], add_pad=True, max_length=args.seq_length)
-                tokens = tokens[0]
-                pos = pos[0]
-                vm = vm[0].astype("bool")
-
-                token_ids = [vocab.get(t) for t in tokens]
-                mask = []
-                seg_tag = 1
-                for t in tokens:
-                    if t == PAD_TOKEN:
-                        mask.append(0)
-                    else:
-                        mask.append(seg_tag)
-                    if t == SEP_TOKEN:
-                        seg_tag += 1
-                
-                dataset.append((token_ids, label, mask, pos, vm, qid))
-            else:
-                pass
-            
-        except Exception as e:
-            print("Error line: ", line, sys.exc_info()[2])
+        # except:
+        #     print("Error line: ", [word.encode("utf-8") for word in line])
     return dataset
 
 
@@ -217,6 +217,10 @@ def main():
     parser.add_argument("--workers_num", type=int, default=1, help="number of process for loading dataset")
     parser.add_argument("--no_vm", action="store_true", help="Disable the visible_matrix")
 
+    # my options
+    parser.add_argument("--dataset_fpath", type=str, default=None, help="dataset file path")
+
+
     args = parser.parse_args()
 
     # Load the hyperparameters from the config file.
@@ -227,6 +231,9 @@ def main():
     # Count the number of labels.
     labels_set = set()
     columns = {}
+
+    # args.train_path = "./datasets/book_review/train.tsv"
+    # Can replace with IMDB
     with open(args.train_path, mode="r", encoding="utf-8") as f:
         for line_id, line in enumerate(f):
             try:
@@ -243,6 +250,7 @@ def main():
 
     # Load vocabulary.
     vocab = Vocab()
+    # vocab_path = "./models/google_vocab.txt"
     vocab.load(args.vocab_path)
     args.vocab = vocab
 
@@ -310,7 +318,10 @@ def main():
         sentence_num = len(sentences)
 
         print("There are {} sentence in total. We use {} processes to inject knowledge into sentences.".format(sentence_num, workers_num))
-        if workers_num > 1:
+        if args.dataset_fpath:
+            with open(args.dataset_fpath) as f:
+                dataset = np.load(args.dataset_fpath, allow_pickle=True)
+        elif workers_num > 1:
             params = []
             sentence_per_block = int(sentence_num / workers_num) + 1
             for i in range(workers_num):
@@ -324,6 +335,7 @@ def main():
             params = (0, sentences, columns, kg, vocab, args)
             dataset = add_knowledge_worker(params)
 
+        np.save('dataset.npy', np.array(dataset, dtype=object), allow_pickle=True)
         return dataset
 
     # Evaluation function.
@@ -378,24 +390,16 @@ def main():
                     confusion[pred[j], gold[j]] += 1
                 correct += torch.sum(pred == gold).item()
         
-            
-            print("Confusion matrix:")
-            print(confusion)
-            print("Report precision, recall, and f1:")
+            if is_test:
+                print("Confusion matrix:")
+                print(confusion)
+                print("Report precision, recall, and f1:")
             
             for i in range(confusion.size()[0]):
-                try:
-                    p = confusion[i,i].item()/confusion[i,:].sum().item()
-                except ZeroDivisionError:
-                    p = 0
-                try:
-                    r = confusion[i,i].item()/confusion[:,i].sum().item()
-                except ZeroDivisionError:
-                    r = 0
-                try:
-                    f1 = 2*p*r / (p+r)
-                except ZeroDivisionError:
-                    f1 = 0
+                print(confusion)
+                p = confusion[i,i].item()/(confusion[i,:].sum().item()+0.01)
+                r = confusion[i,i].item()/(confusion[:,i].sum().item()+0.01)
+                f1 = 2*p*r / (p+r+0.01)
                 if i == 1:
                     label_1_f1 = f1
                 print("Label {}: {:.3f}, {:.3f}, {:.3f}".format(i,p,r,f1))

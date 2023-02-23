@@ -31,12 +31,16 @@ def build_model(args):
     """
 
     if args.subword_type != "none":
+        # subencoder = AvgSubencoder
         subencoder = globals()[args.subencoder.capitalize() + "Subencoder"](args, len(args.sub_vocab))
     else:
         subencoder = None
 
     embedding = BertEmbedding(args, len(args.vocab))
+
+    # encoder = BertEncoder
     encoder = globals()[args.encoder.capitalize() + "Encoder"](args)
+    # target = BertTarget
     target = globals()[args.target.capitalize() + "Target"](args, len(args.vocab))
     model = Model(args, embedding, encoder, target, subencoder)
 
