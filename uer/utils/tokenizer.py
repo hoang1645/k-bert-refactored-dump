@@ -2,6 +2,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 from uer.utils.constants import *
 from uer.utils.vocab import Vocab
+from transformers import AutoTokenizer
 import collections
 import unicodedata
 
@@ -63,47 +64,50 @@ class BertTokenizer(object):
           never_split: List of tokens which will never be split during tokenization.
                          Only has an effect when do_wordpiece_only=False
         """
-        self.vocab = Vocab()
-        self.vocab.load(args.vocab_path, is_quiet=True)
-        self.ids_to_tokens = collections.OrderedDict(
-            [(ids, tok) for ids, tok in enumerate(self.vocab.i2w)])
-        self.do_basic_tokenize = do_basic_tokenize
-        if do_basic_tokenize:
-          self.basic_tokenizer = BasicTokenizer(do_lower_case=do_lower_case,
-                                                never_split=never_split)
-        self.wordpiece_tokenizer = WordpieceTokenizer(vocab=self.vocab)
-        self.max_len = max_len if max_len is not None else int(1e12)
+        self.tokenizer = AutoTokenizer.from_pretrained('bert-base-cased')
+        # self.vocab = Vocab()
+        # self.vocab.load(args.vocab_path, is_quiet=True)
+        # self.ids_to_tokens = collections.OrderedDict(
+        #     [(ids, tok) for ids, tok in enumerate(self.vocab.i2w)])
+        # self.do_basic_tokenize = do_basic_tokenize
+        # if do_basic_tokenize:
+        #   self.basic_tokenizer = BasicTokenizer(do_lower_case=do_lower_case,
+        #                                         never_split=never_split)
+        # self.wordpiece_tokenizer = WordpieceTokenizer(vocab=self.vocab)
+        # self.max_len = max_len if max_len is not None else int(1e12)
 
     def tokenize(self, text):
-        if self.do_basic_tokenize:
-          split_tokens = []
-          for token in self.basic_tokenizer.tokenize(text):
-              for sub_token in self.wordpiece_tokenizer.tokenize(token):
-                  split_tokens.append(sub_token)
-        else:
-          split_tokens = self.wordpiece_tokenizer.tokenize(text)
-        return split_tokens
+        # if self.do_basic_tokenize:
+        #   split_tokens = []
+        #   for token in self.basic_tokenizer.tokenize(text):
+        #       for sub_token in self.wordpiece_tokenizer.tokenize(token):
+        #           split_tokens.append(sub_token)
+        # else:
+        #   split_tokens = self.wordpiece_tokenizer.tokenize(text)
+        # return split_tokens
+        return self.tokenizer.tokenize(text)
 
     def convert_tokens_to_ids(self, tokens):
-        """Converts a sequence of tokens into ids using the vocab."""
-        ids = []
-        for token in tokens:
-            ids.append(self.vocab.w2i[token])
-        if len(ids) > self.max_len:
-            logger.warning(
-                "Token indices sequence length is longer than the specified maximum "
-                " sequence length for this BERT model ({} > {}). Running this"
-                " sequence through BERT will result in indexing errors".format(len(ids), self.max_len)
-            )
-        return ids
+        # """Converts a sequence of tokens into ids using the vocab."""
+        # ids = []
+        # for token in tokens:
+        #     ids.append(self.vocab.w2i[token])
+        # if len(ids) > self.max_len:
+        #     logger.warning(
+        #         "Token indices sequence length is longer than the specified maximum "
+        #         " sequence length for this BERT model ({} > {}). Running this"
+        #         " sequence through BERT will result in indexing errors".format(len(ids), self.max_len)
+        #     )
+        # return ids
+        return self.tokenizer.convert_tokens_to_ids(tokens)
 
     def convert_ids_to_tokens(self, ids):
-        """Converts a sequence of ids in wordpiece tokens using the vocab."""
-        tokens = []
-        for i in ids:
-            tokens.append(self.ids_to_tokens[i])
-        return tokens
-
+        # """Converts a sequence of ids in wordpiece tokens using the vocab."""
+        # tokens = []
+        # for i in ids:
+        #     tokens.append(self.ids_to_tokens[i])
+        # return tokens
+        return self.tokenizer.convert_ids_to_tokens(ids)
 
 class BasicTokenizer(object):
     """Runs basic tokenization (punctuation splitting, lower casing, etc.)."""
