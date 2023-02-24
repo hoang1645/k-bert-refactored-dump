@@ -20,6 +20,15 @@ from uer.model_saver import save_model
 from brain import KnowledgeGraph
 from multiprocessing import Process, Pool
 import numpy as np
+import time
+
+class TimeContextManager:
+    def __enter__(self):
+        self.start = time.time()
+
+    def __exit__(self, type, value, traceback):
+        end = time.time()
+        print(f"Total time: {end - self.start}")
 
 
 class BertClassifier(nn.Module):
@@ -507,7 +516,8 @@ def main():
 
     # Training phase.
     print("Start training.")
-    trainset = read_dataset(args.train_path, workers_num=args.workers_num)
+    with TimeContextManager():
+        trainset = read_dataset(args.train_path, workers_num=args.workers_num)
     print("Shuffling dataset")
     random.shuffle(trainset)
     instances_num = len(trainset)
