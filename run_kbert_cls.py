@@ -21,6 +21,7 @@ from brain import KnowledgeGraph
 from multiprocessing import Process, Pool
 import numpy as np
 import time
+import os
 
 class TimeContextManager:
     def __enter__(self):
@@ -226,10 +227,6 @@ def main():
     parser.add_argument("--workers_num", type=int, default=1, help="number of process for loading dataset")
     parser.add_argument("--no_vm", action="store_true", help="Disable the visible_matrix")
 
-    # my options
-    parser.add_argument("--dataset_fpath", type=str, default=None, help="dataset file path")
-
-
     args = parser.parse_args()
 
     # Load the hyperparameters from the config file.
@@ -315,9 +312,14 @@ def main():
         spo_files = [args.kg_name]
     kg = KnowledgeGraph(spo_files=spo_files, predicate=True)
 
-    def read_dataset(path, workers_num=1):
-
+    def read_dataset(path, workers_num=1, preload_fpath=None):
         print("Loading sentences from {}".format(path))
+
+        if os.path.isfile(preload_fpath):
+            with open(preload_fpath) as f:
+                dataset = np.load(preload_fpath, allow_pickle=True)
+                return dataset
+
         sentences = []
         with open(path, mode='r', encoding="utf-8") as f:
             for line_id, line in enumerate(f):
@@ -327,10 +329,7 @@ def main():
         sentence_num = len(sentences)
 
         print("There are {} sentence in total. We use {} processes to inject knowledge into sentences.".format(sentence_num, workers_num))
-        if args.dataset_fpath:
-            with open(args.dataset_fpath) as f:
-                dataset = np.load(args.dataset_fpath, allow_pickle=True)
-        elif workers_num > 1:
+        if workers_num > 1:
             params = []
             sentence_per_block = int(sentence_num / workers_num) + 1
             for i in range(workers_num):
@@ -344,15 +343,16 @@ def main():
             params = (0, sentences, columns, kg, vocab, args)
             dataset = add_knowledge_worker(params)
 
-        np.save('dataset.npy', np.array(dataset, dtype=object), allow_pickle=True)
+        if preload_fpath:
+            np.save(preload_fpath, np.array(dataset, dtype=object), allow_pickle=True)
         return dataset
 
     # Evaluation function.
-    def evaluate(args, is_test, metrics='Acc'):
+    def evaluate(args, is_test, metrics='Acc', preload_fpath=None):
         if is_test:
-            dataset = read_dataset(args.test_path, workers_num=args.workers_num)
+            dataset = read_dataset(args.test_path, workers_num=args.workers_num, preload_fpath=preload_fpath)
         else:
-            dataset = read_dataset(args.dev_path, workers_num=args.workers_num)
+            dataset = read_dataset(args.dev_path, workers_num=args.workers_num, preload_fpath=preload_fpath)
 
         input_ids = torch.LongTensor([sample[0] for sample in dataset])
         label_ids = torch.LongTensor([sample[1] for sample in dataset])
@@ -516,8 +516,7 @@ def main():
 
     # Training phase.
     print("Start training.")
-    with TimeContextManager():
-        trainset = read_dataset(args.train_path, workers_num=args.workers_num)
+    trainset = read_dataset(args.train_path, workers_num=args.workers_num, preload_fpath="train.npy")
     print("Shuffling dataset")
     random.shuffle(trainset)
     instances_num = len(trainset)
@@ -577,7 +576,7 @@ def main():
             optimizer.step()
 
         print("Start evaluation on dev dataset.")
-        result = evaluate(args, False)
+        result = evaluate(args, False, preload_fpath="eval.npy")
         if result > best_result:
             best_result = result
             save_model(model, args.output_model_path)
@@ -585,7 +584,7 @@ def main():
             continue
 
         print("Start evaluation on test dataset.")
-        evaluate(args, True)
+        evaluate(args, True, preload_fpath="test.npy")
 
     # Evaluation phase.
     print("Final evaluation on the test dataset.")
