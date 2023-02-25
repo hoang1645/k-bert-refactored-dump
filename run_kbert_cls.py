@@ -516,7 +516,8 @@ def main():
 
     # Training phase.
     print("Start training.")
-    trainset = read_dataset(args.train_path, workers_num=args.workers_num, preload_fpath="train.npy")
+    with TimeContextManager():
+        trainset = read_dataset(args.train_path, workers_num=args.workers_num, preload_fpath="train.npy")
     print("Shuffling dataset")
     random.shuffle(trainset)
     instances_num = len(trainset)
@@ -576,7 +577,8 @@ def main():
             optimizer.step()
 
         print("Start evaluation on dev dataset.")
-        result = evaluate(args, False, preload_fpath="eval.npy")
+        with TimeContextManager():
+            result = evaluate(args, False, preload_fpath="eval.npy")
         if result > best_result:
             best_result = result
             save_model(model, args.output_model_path)
