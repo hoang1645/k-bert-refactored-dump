@@ -64,7 +64,7 @@ class BertTokenizer(object):
           never_split: List of tokens which will never be split during tokenization.
                          Only has an effect when do_wordpiece_only=False
         """
-        self.tokenizer = AutoTokenizer.from_pretrained('bert-base-cased')
+        self.tokenizer = AutoTokenizer.from_pretrained('bert-base-multilingual-cased')
         # self.vocab = Vocab()
         # self.vocab.load(args.vocab_path, is_quiet=True)
         # self.ids_to_tokens = collections.OrderedDict(
