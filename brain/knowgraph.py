@@ -42,7 +42,7 @@ class KnowledgeGraph(object):
                 visible_matrix_batch - list of visible matrixs
                 seg_batch - list of segment tags
         """
-        split_sent_batch = [self.tokenizer(sent) for sent in sent_batch]
+        split_sent_batch = [self.tokenizer.tokenize(sent) for sent in sent_batch]
         know_sent_batch = []
         position_batch = []
         visible_matrix_batch = []
