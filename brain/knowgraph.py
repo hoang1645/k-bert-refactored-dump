@@ -42,6 +42,7 @@ class KnowledgeGraph(object):
                 visible_matrix_batch - list of visible matrixs
                 seg_batch - list of segment tags
         """
+        # split_sent_batch = [self.tokenizer.cut(sent) for sent in sent_batch]
         split_sent_batch = [self.tokenizer.tokenize(sent) for sent in sent_batch]
         know_sent_batch = []
         position_batch = []
@@ -50,31 +51,37 @@ class KnowledgeGraph(object):
         for split_sent in split_sent_batch:
 
             # create tree
+            # sent_tree: list(tuple(str, list(str)))  -> [("token", [entities])]
             sent_tree = []
+            # pos_idx_tree: list(tuple(list(int), list(int))) -> the tuple includes soft positions of token end entities
             pos_idx_tree = []
+            # abs_idx_tree: same as pos_idx with hard positions
             abs_idx_tree = []
             pos_idx = -1
             abs_idx = -1
             abs_idx_src = []
             for token in split_sent:
-
                 entities = list(self.lookup_table.get(token, []))[:max_entities]
                 sent_tree.append((token, entities))
 
-                if token in self.special_tags:
-                    token_pos_idx = [pos_idx+1]
-                    token_abs_idx = [abs_idx+1]
-                else:
-                    token_pos_idx = [pos_idx+i for i in range(1, len(token)+1)]
-                    token_abs_idx = [abs_idx+i for i in range(1, len(token)+1)]
+                # if token in self.special_tags:
+                #     token_pos_idx = [pos_idx+1]
+                #     token_abs_idx = [abs_idx+1]
+                # else:
+                #     token_pos_idx = [pos_idx+i for i in range(1, len(token)+1)]
+                #     token_abs_idx = [abs_idx+i for i in range(1, len(token)+1)]
+                token_pos_idx = [pos_idx + 1]
+                token_abs_idx = [abs_idx + 1]
                 abs_idx = token_abs_idx[-1]
 
                 entities_pos_idx = []
                 entities_abs_idx = []
                 for ent in entities:
-                    ent_pos_idx = [token_pos_idx[-1] + i for i in range(1, len(ent)+1)]
+                    # ent_pos_idx = [token_pos_idx[-1] + i for i in range(1, len(ent)+1)]
+                    ent_pos_idx = [token_pos_idx[-1] + 1]
                     entities_pos_idx.append(ent_pos_idx)
-                    ent_abs_idx = [abs_idx + i for i in range(1, len(ent)+1)]
+                    # ent_abs_idx = [abs_idx + i for i in range(1, len(ent)+1)]
+                    ent_abs_idx = [abs_idx + 1]
                     abs_idx = ent_abs_idx[-1]
                     entities_abs_idx.append(ent_abs_idx)
 
@@ -93,12 +100,14 @@ class KnowledgeGraph(object):
                     know_sent += [word]
                     seg += [0]
                 else:
-                    add_word = list(word)
+                    # add_word = list(word)
+                    add_word = [word]
                     know_sent += add_word 
                     seg += [0] * len(add_word)
                 pos += pos_idx_tree[i][0]
                 for j in range(len(sent_tree[i][1])):
-                    add_word = list(sent_tree[i][1][j])
+                    # add_word = list(sent_tree[i][1][j])
+                    add_word = [sent_tree[i][1][j]]
                     know_sent += add_word
                     seg += [1] * len(add_word)
                     pos += list(pos_idx_tree[i][1][j])
