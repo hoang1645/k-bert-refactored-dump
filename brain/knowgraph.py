@@ -61,9 +61,11 @@ class KnowledgeGraph(object):
         for split_sent in split_sent_batch:
 
             # create tree
-            # sent_tree: list(tuple(str, list(str))) [("token", [entities])]
+            # sent_tree: list(tuple(str, list(str)))  -> [("token", [entities])]
             sent_tree = []
+            # pos_idx_tree: list(tuple(list(int), list(int))) -> the tuple includes soft positions of token end entities
             pos_idx_tree = []
+            # abs_idx_tree: same as pos_idx with hard positions
             abs_idx_tree = []
             pos_idx = -1
             abs_idx = -1
@@ -92,7 +94,7 @@ class KnowledgeGraph(object):
                     ent_abs_idx = [abs_idx + 1]
                     abs_idx = ent_abs_idx[-1]
                     entities_abs_idx.append(ent_abs_idx)
-                    
+
                 pos_idx_tree.append((token_pos_idx, entities_pos_idx))
                 pos_idx = token_pos_idx[-1]
                 abs_idx_tree.append((token_abs_idx, entities_abs_idx))
@@ -114,7 +116,8 @@ class KnowledgeGraph(object):
                     seg += [0] * len(add_word)
                 pos += pos_idx_tree[i][0]
                 for j in range(len(sent_tree[i][1])):
-                    add_word = list(sent_tree[i][1][j])
+                    # add_word = list(sent_tree[i][1][j])
+                    add_word = [sent_tree[i][1][j]]
                     know_sent += add_word
                     seg += [1] * len(add_word)
                     pos += list(pos_idx_tree[i][1][j])
