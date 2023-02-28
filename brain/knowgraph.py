@@ -10,7 +10,7 @@ class KnowledgeGraph(object):
         self.spo_file_paths = [config.KGS.get(f, f) for f in spo_files]
         self.lookup_table = self._create_lookup_table()
         self.segment_vocab = list(self.lookup_table.keys()) + config.NEVER_SPLIT_TAG
-        self.tokenizer = AutoTokenizer.from_pretrained('bert-base-multilingual-cased')
+        self.tokenizer = AutoTokenizer.from_pretrained('bert-base-uncased')
         self.special_tags = set(config.NEVER_SPLIT_TAG)
 
     def _create_lookup_table(self):
