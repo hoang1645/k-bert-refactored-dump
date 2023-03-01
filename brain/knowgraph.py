@@ -37,7 +37,10 @@ class KnowledgeGraph(object):
                     #     value = pred + obje
                     # else:
                     #     value = obje
-                    value = obje
+                    if self.predicate:
+                        value = " ".join([pred, obje])
+                    else:
+                        value = obje
                     if subj in lookup_table.keys():
                         lookup_table[subj].add(value)
                     else:
@@ -88,10 +91,13 @@ class KnowledgeGraph(object):
                 entities_abs_idx = []
                 for ent in entities:
                     # ent_pos_idx = [token_pos_idx[-1] + i for i in range(1, len(ent)+1)]
-                    ent_pos_idx = [token_pos_idx[-1] + 1]
+                    # ent_pos_idx = [token_pos_idx[-1] + 1]
+                    tokenized_ent = self.tokenizer.tokenize(ent)
+                    ent_pos_idx = [token_pos_idx[-1] + i for i in range(1, len(tokenized_ent)+1)]
                     entities_pos_idx.append(ent_pos_idx)
                     # ent_abs_idx = [abs_idx + i for i in range(1, len(ent)+1)]
-                    ent_abs_idx = [abs_idx + 1]
+                    # ent_abs_idx = [abs_idx + 1]
+                    ent_abs_idx = [abs_idx + i for i in range(1, len(tokenized_ent)+1)]
                     abs_idx = ent_abs_idx[-1]
                     entities_abs_idx.append(ent_abs_idx)
 
@@ -117,7 +123,8 @@ class KnowledgeGraph(object):
                 pos += pos_idx_tree[i][0]
                 for j in range(len(sent_tree[i][1])):
                     # add_word = list(sent_tree[i][1][j])
-                    add_word = [sent_tree[i][1][j]]
+                    # add_word = [sent_tree[i][1][j]]
+                    add_word = self.tokenizer.tokenize(sent_tree[i][1][j])
                     know_sent += add_word
                     seg += [1] * len(add_word)
                     pos += list(pos_idx_tree[i][1][j])
