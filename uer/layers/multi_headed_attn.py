@@ -19,6 +19,7 @@ class MultiHeadedAttention(nn.Module):
             ])
         self.dropout = nn.Dropout(dropout)
         self.final_linear = nn.Linear(hidden_size, hidden_size)
+        # self.half()
 
     def forward(self, key, value, query, mask):
         """
@@ -57,7 +58,7 @@ class MultiHeadedAttention(nn.Module):
         scores = torch.matmul(query, key.transpose(-2, -1))
         scores = scores / math.sqrt(float(per_head_size)) 
         scores = scores + mask
-        probs = nn.Softmax(dim=-1)(scores)
+        probs = nn.Softmax(dim=-1)(scores)#.half()
         probs = self.dropout(probs)
         output = unshape(torch.matmul(probs, value))
         output = self.final_linear(output)

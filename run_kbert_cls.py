@@ -216,6 +216,7 @@ def main():
     parser.add_argument("--kg_name", required=True, help="KG name or path")
     parser.add_argument("--workers_num", type=int, default=1, help="number of process for loading dataset")
     parser.add_argument("--no_vm", action="store_true", help="Disable the visible_matrix")
+    parser.add_argument("--eval", action=argparse.BooleanOptionalAction, help='only evaluate')
 
     args = parser.parse_args()
 
@@ -250,11 +251,11 @@ def main():
     # A pseudo target is added.
     args.target = "bert"
     model = build_model(args)
-
     # Load or initialize parameters.
     if args.pretrained_model_path is not None:
         # Initialize with pretrained model.
-        model.load_state_dict(torch.load(args.pretrained_model_path), strict=False)  
+        model.load_state_dict(torch.load(args.pretrained_model_path), strict=False) 
+        print(model.state_dict().keys())
     else:
         # Initialize with normal distribution.
         for n, p in list(model.named_parameters()):
@@ -263,7 +264,7 @@ def main():
     
     # Build classification model.
     model = BertClassifier(args, model)
-
+    # model.half()
     # For simplicity, we use DataParallel wrapper to use multiple GPUs.
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     if torch.cuda.device_count() > 1:
@@ -271,7 +272,7 @@ def main():
         model = nn.DataParallel(model)
 
     model = model.to(device)
-    
+    # model.half()
     # Datset loader.
     def batch_loader(batch_size, input_ids, label_ids, mask_ids, pos_ids, vms):
         instances_num = input_ids.size()[0]
@@ -500,6 +501,9 @@ def main():
             MRR = sum(rank) / len(rank)
             print("MRR", MRR)
             return MRR
+    if args.eval:
+        evaluate(args, is_test=True)
+        return
 
     # Training phase.
     print("Start training.")
