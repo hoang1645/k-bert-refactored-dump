@@ -337,9 +337,9 @@ def main():
                     correct += 1
 
         print("Report precision, recall, and f1:")
-        p = correct/pred_entities_num
-        r = correct/gold_entities_num
-        f1 = 2*p*r/(p+r)
+        p = correct/(pred_entities_num + 0.1)
+        r = correct/(gold_entities_num + 0.1)
+        f1 = 2*p*r/(p+r+0.1)
         print("{:.3f}, {:.3f}, {:.3f}".format(p,r,f1))
 
         return f1
