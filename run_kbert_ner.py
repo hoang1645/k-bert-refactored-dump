@@ -220,9 +220,10 @@ def main():
             tokens, labels = [], []
             for line_id, line in enumerate(f):
                 tokens, labels = line.strip().split("\t")
-
-                text = ''.join(tokens.split(" "))
-                tokens, pos, vm, tag = kg.add_knowledge_with_vm([text], add_pad=True, max_length=args.seq_length)
+                # text = ''.join(tokens.split(" "))
+                text = tokens
+                # tokens, pos, vm, tag = kg.add_knowledge_with_vm([text], add_pad=True, max_length=args.seq_length)
+                tokens, pos, vm, tag = kg.add_knowledge_with_vm(text, add_pad=True, max_length=args.seq_length)
                 tokens = tokens[0]
                 pos = pos[0]
                 vm = vm[0].astype("bool")
