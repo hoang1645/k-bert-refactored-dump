@@ -47,7 +47,7 @@ class KnowledgeGraph(object):
                         lookup_table[subj] = set([value])
         return lookup_table
 
-    def add_knowledge_with_vm(self, sent_batch, max_entities=config.MAX_ENTITIES, add_pad=True, max_length=128):
+    def add_knowledge_with_vm(self, sent_batch, max_entities=config.MAX_ENTITIES, add_pad=True, max_length=128, ner=False):
         """
         input: sent_batch - list of sentences, e.g., ["abcd", "efgh"]
         return: know_sent_batch - list of sentences with entites embedding
@@ -56,7 +56,10 @@ class KnowledgeGraph(object):
                 seg_batch - list of segment tags
         """
         # split_sent_batch = [self.tokenizer.cut(sent) for sent in sent_batch]
-        split_sent_batch = [self.tokenizer.tokenize(sent) for sent in sent_batch]
+        if ner:
+            split_sent_batch = [sent.split() for sent in sent_batch]
+        else:
+            split_sent_batch = [self.tokenizer.tokenize(sent) for sent in sent_batch]
         know_sent_batch = []
         position_batch = []
         visible_matrix_batch = []
