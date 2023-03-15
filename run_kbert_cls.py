@@ -595,7 +595,7 @@ def main():
         model.module.load_state_dict(torch.load(args.output_model_path))
     else:
         model.load_state_dict(torch.load(args.output_model_path))
-    evaluate(args, True)
+    evaluate(args, True, preload_fpath="test.npy")
 
 
 if __name__ == "__main__":
