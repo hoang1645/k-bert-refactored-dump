@@ -17,6 +17,7 @@ class BertEmbedding(nn.Module):
         self.position_embedding = nn.Embedding(self.max_length, args.emb_size)
         self.segment_embedding = nn.Embedding(3, args.emb_size)
         self.layer_norm = LayerNorm(args.emb_size)
+        if args.fp16: self.half()
 
     def forward(self, src, seg, pos=None):
         word_emb = self.word_embedding(src)

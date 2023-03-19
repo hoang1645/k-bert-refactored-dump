@@ -29,7 +29,7 @@ def build_model(args):
     properties. 
     We could select suitable one for downstream tasks.
     """
-
+    print(args.target)
     if args.subword_type != "none":
         subencoder = globals()[args.subencoder.capitalize() + "Subencoder"](args, len(args.sub_vocab))
     else:

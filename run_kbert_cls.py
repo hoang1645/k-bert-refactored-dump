@@ -31,6 +31,9 @@ class BertClassifier(nn.Module):
         self.pooling = args.pooling
         self.output_layer_1 = nn.Linear(args.hidden_size, args.hidden_size)
         self.output_layer_2 = nn.Linear(args.hidden_size, args.labels_num)
+        if args.fp16:
+            self.output_layer_1.half()
+            self.output_layer_2.half()
         self.softmax = nn.LogSoftmax(dim=-1)
         self.criterion = nn.NLLLoss()
         self.use_vm = False if args.no_vm else True
@@ -216,8 +219,8 @@ def main():
     parser.add_argument("--kg_name", required=True, help="KG name or path")
     parser.add_argument("--workers_num", type=int, default=1, help="number of process for loading dataset")
     parser.add_argument("--no_vm", action="store_true", help="Disable the visible_matrix")
-    parser.add_argument("--eval", action=argparse.BooleanOptionalAction, help='only evaluate')
-
+    parser.add_argument("--eval", action="store_true", help='only evaluate')
+    parser.add_argument("--fp16", action='store_true', help='use half-precision floating points')
     args = parser.parse_args()
 
     # Load the hyperparameters from the config file.
@@ -241,8 +244,7 @@ def main():
             except:
                 pass
     args.labels_num = len(labels_set) 
-
-    # Load vocabulary.
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     vocab = Vocab()
     vocab.load(args.vocab_path)
     args.vocab = vocab
@@ -251,11 +253,11 @@ def main():
     # A pseudo target is added.
     args.target = "bert"
     model = build_model(args)
+
     # Load or initialize parameters.
     if args.pretrained_model_path is not None:
         # Initialize with pretrained model.
-        model.load_state_dict(torch.load(args.pretrained_model_path), strict=False) 
-        print(model.state_dict().keys())
+        model.load_state_dict(torch.load(args.pretrained_model_path), strict=False)
     else:
         # Initialize with normal distribution.
         for n, p in list(model.named_parameters()):
@@ -266,7 +268,7 @@ def main():
     model = BertClassifier(args, model)
     # model.half()
     # For simplicity, we use DataParallel wrapper to use multiple GPUs.
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    
     if torch.cuda.device_count() > 1:
         print("{} GPUs are available. Let's use them.".format(torch.cuda.device_count()))
         model = nn.DataParallel(model)
@@ -326,7 +328,7 @@ def main():
             dataset = add_knowledge_worker(params)
 
         return dataset
-
+    
     # Evaluation function.
     def evaluate(args, is_test, metrics='Acc'):
         if is_test:
@@ -501,9 +503,17 @@ def main():
             MRR = sum(rank) / len(rank)
             print("MRR", MRR)
             return MRR
+    # Load vocabulary.
+
+
+
     if args.eval:
+        
+        model.load_state_dict(torch.load(args.pretrained_model_path))
+        print(model.state_dict().keys())
         evaluate(args, is_test=True)
         return
+
 
     # Training phase.
     print("Start training.")

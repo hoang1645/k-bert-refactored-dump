@@ -15,7 +15,7 @@ class TransformerLayer(nn.Module):
 
         # Multi-headed self-attention.
         self.self_attn = MultiHeadedAttention(
-            args.hidden_size, args.heads_num, args.dropout
+            args.hidden_size, args.heads_num, args.dropout, args.fp16
         )
         self.dropout_1 = nn.Dropout(args.dropout)
         self.layer_norm_1 = LayerNorm(args.hidden_size)
@@ -25,7 +25,7 @@ class TransformerLayer(nn.Module):
         )
         self.dropout_2 = nn.Dropout(args.dropout)
         self.layer_norm_2 = LayerNorm(args.hidden_size)
-
+        if args.fp16: self.half()
     def forward(self, hidden, mask):
         """
         Args:
