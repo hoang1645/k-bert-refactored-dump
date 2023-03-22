@@ -8,5 +8,5 @@ CUDA_VISIBLE_DEVICES=0 python run_kbert_cls.py \
 --dev_path dataset/valid.csv \
 --test_path dataset/test.csv \
 --epochs_num 10 --batch_size 4 --kg_name brain/kgs/FB15k-237.spo \
---output_model_path outputs/kbert_imdb_fb15k237.bin --workers_num 3 --fp16 --tokenizer roberta
+--output_model_path outputs/kbert_imdb_fb15k237.bin --workers_num 3 --fp16
 # --pretrained_model_path ../bert-base-uncased/pytorch_model.bin \

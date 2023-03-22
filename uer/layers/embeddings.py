@@ -12,7 +12,7 @@ class BertEmbedding(nn.Module):
     def __init__(self, args, vocab_size):
         super(BertEmbedding, self).__init__()
         self.dropout = nn.Dropout(args.dropout)
-        self.max_length = 512
+        self.max_length = 514
         self.word_embedding = nn.Embedding(vocab_size, args.emb_size)
         self.position_embedding = nn.Embedding(self.max_length, args.emb_size)
         self.segment_embedding = nn.Embedding(3, args.emb_size)

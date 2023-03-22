@@ -65,6 +65,7 @@ class BertTokenizer(object):
                          Only has an effect when do_wordpiece_only=False
         """
         self.tokenizer = AutoTokenizer.from_pretrained('bert-base-uncased')
+        print("HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH")
         # self.vocab = Vocab()
         # self.vocab.load(args.vocab_path, is_quiet=True)
         # self.ids_to_tokens = collections.OrderedDict(
