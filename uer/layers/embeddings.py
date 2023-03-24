@@ -15,7 +15,7 @@ class BertEmbedding(nn.Module):
         self.max_length = 512
         self.word_embedding = nn.Embedding(vocab_size, args.emb_size)
         self.position_embedding = nn.Embedding(self.max_length, args.emb_size)
-        self.segment_embedding = nn.Embedding(3, args.emb_size)
+        self.segment_embedding = nn.Embedding(2, args.emb_size)
         self.layer_norm = LayerNorm(args.emb_size)
 
     def forward(self, src, seg, pos=None):
